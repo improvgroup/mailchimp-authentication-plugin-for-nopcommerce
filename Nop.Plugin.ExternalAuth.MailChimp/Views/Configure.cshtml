@@ -1,0 +1,52 @@
+﻿@model Nop.Plugin.ExternalAuth.MailChimp.Models.ConfigurationModel
+@{
+    Layout = "_ConfigurePlugin";
+}
+@inject Nop.Core.IWebHelper webHelper
+
+@await Component.InvokeAsync("StoreScopeConfiguration")
+
+@using (Html.BeginForm("Configure", "MailChimpAuthentication"))
+{
+    @Html.AntiForgeryToken()
+    <div class="panel-group">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <p>
+                    To configure authentication with MailChimp follow these steps:<br />
+                    <br />
+                    1. Log into your MailChimp account (click <a href="https://login.mailchimp.com/signup/" target="_blank">here</a> to create a new one).<br />
+                    2. Go to Profile -> Extras -> Registered apps.<br />
+                    3. Register a new App.<br />
+                    4. Enter "@($"{webHelper.GetStoreLocation()}signin-mailchimp")" into Redirect URI field.<br />
+                    5. Copy your Client ID and Client secret below.<br />
+                </p>
+                <div class="form-group">
+                    <div class="col-md-3">
+                        @Html.OverrideStoreCheckboxFor(model => model.ClientId_OverrideForStore, model => model.ClientId, Model.ActiveStoreScopeConfiguration)
+                        @Html.NopLabelFor(model => model.ClientId)
+                    </div>
+                    <div class="col-md-9">
+                        @Html.NopEditorFor(model => model.ClientId)
+                        @Html.ValidationMessageFor(model => model.ClientId)
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-3">
+                        @Html.OverrideStoreCheckboxFor(model => model.ClientSecret_OverrideForStore, model => model.ClientSecret, Model.ActiveStoreScopeConfiguration)
+                        @Html.NopLabelFor(model => model.ClientSecret)
+                    </div>
+                    <div class="col-md-9">
+                        @Html.NopEditorFor(model => model.ClientSecret)
+                        @Html.ValidationMessageFor(model => model.ClientSecret)
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-9 col-md-offset-3">
+                        <input type="submit" name="save" class="btn bg-primary" value="@T("Admin.Common.Save")" />
+                    </div>
+                </div> 
+            </div>
+        </div>
+    </div> 
+}
