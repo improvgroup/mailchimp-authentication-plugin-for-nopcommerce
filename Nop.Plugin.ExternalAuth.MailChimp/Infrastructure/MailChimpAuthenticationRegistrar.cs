@@ -1,59 +1,47 @@
 ﻿using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OAuth;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Linq;
 using Nop.Core.Infrastructure;
+using Nop.Services.Authentication.External;
 using Nop.Services.Logging;
 
 namespace Nop.Plugin.ExternalAuth.MailChimp.Infrastructure
 {
     /// <summary>
-    /// Represents object for the configuring MailChimp authentication middleware on application startup
+    /// Registration of MailChimp external authentication
     /// </summary>
-    public class MailChimpAuthenticationStartup : INopStartup
+    public class MailChimpAuthenticationRegistrar : IExternalAuthenticationRegistrar
     {
         /// <summary>
-        /// Add and configure any of the middleware
+        /// Configure
         /// </summary>
-        /// <param name="services">Collection of service descriptors</param>
-        /// <param name="configuration">Configuration root of the application</param>
-        public void ConfigureServices(IServiceCollection services, IConfigurationRoot configuration)
+        /// <param name="builder">Authentication builder</param>
+        public void Configure(AuthenticationBuilder builder)
         {
-        }
-
-        /// <summary>
-        /// Configure the using of added middleware
-        /// </summary>
-        /// <param name="application">Builder for configuring an application's request pipeline</param>
-        public void Configure(IApplicationBuilder application)
-        {
-            var settings = EngineContext.Current.Resolve<MailChimpAuthenticationSettings>();
-            if (string.IsNullOrEmpty(settings?.ClientId) || string.IsNullOrEmpty(settings?.ClientSecret))
-                return;
-
-            //add the OAuth2 middleware
-            application.UseOAuthAuthentication(new OAuthOptions
+            //add the OAuth2 authentication
+            builder.AddOAuth(MailChimpAuthenticationDefaults.AuthenticationScheme, options =>
             {
-                AuthenticationScheme = MailChimpAuthenticationDefaults.AuthenticationScheme,
-                CallbackPath = new PathString(MailChimpAuthenticationDefaults.CallbackPath),
-                ClaimsIssuer = MailChimpAuthenticationDefaults.ClaimsIssuer,
-                SaveTokens = true,
+                var settings = EngineContext.Current.Resolve<MailChimpAuthenticationSettings>();
+
+                options.CallbackPath = new PathString(MailChimpAuthenticationDefaults.CallbackPath);
+                options.ClaimsIssuer = MailChimpAuthenticationDefaults.ClaimsIssuer;
+                options.SaveTokens = true;
 
                 //configure the OAuth2 Client ID and Client Secret
-                ClientId = settings.ClientId,
-                ClientSecret = settings.ClientSecret,                
+                options.ClientId = settings.ClientId;
+                options.ClientSecret = settings.ClientSecret;
 
                 //configure the MailChimp endpoints                
-                AuthorizationEndpoint = MailChimpAuthenticationDefaults.AuthorizationEndpoint,
-                TokenEndpoint = MailChimpAuthenticationDefaults.TokenEndpoint,
-                UserInformationEndpoint = MailChimpAuthenticationDefaults.UserInformationEndpoint,
+                options.AuthorizationEndpoint = MailChimpAuthenticationDefaults.AuthorizationEndpoint;
+                options.TokenEndpoint = MailChimpAuthenticationDefaults.TokenEndpoint;
+                options.UserInformationEndpoint = MailChimpAuthenticationDefaults.UserInformationEndpoint;
 
-                Events = new OAuthEvents
+                options.Events = new OAuthEvents
                 {
                     // The OnCreatingTicket event is called after the user has been authenticated and the OAuth middleware has
                     // created an auth ticket. We need to manually call the UserInformationEndpoint to retrieve the user's information,
@@ -97,16 +85,8 @@ namespace Nop.Plugin.ExternalAuth.MailChimp.Infrastructure
                         if (!string.IsNullOrEmpty(avatar))
                             context.Identity.AddClaim(new Claim(MailChimpAuthenticationDefaults.AvatarClaimType, avatar));
                     }
-                }
+                };
             });
-        }
-
-        /// <summary>
-        /// Gets order of this startup configuration implementation
-        /// </summary>
-        public int Order
-        {
-            get { return 501; }
         }
     }
 }

@@ -57,12 +57,12 @@ namespace Nop.Plugin.ExternalAuth.MailChimp.Infrastructure.Cache
                 return;
 
             //store some of the customer fields
-            var firstName = eventMessage.AuthenticationParameters.Claims?.FirstOrDefault(claim => claim.Type == ClaimTypes.Name)?.Value;
+            var firstName = eventMessage.AuthenticationParameters.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Name)?.Value;
             if (!string.IsNullOrEmpty(firstName))
                 _genericAttributeService.SaveAttribute(eventMessage.Customer, SystemCustomerAttributeNames.FirstName, firstName);
 
             //upload avatar
-            var avatarUrl = eventMessage.AuthenticationParameters.Claims?.FirstOrDefault(claim => claim.Type == MailChimpAuthenticationDefaults.AvatarClaimType)?.Value;
+            var avatarUrl = eventMessage.AuthenticationParameters.Claims.FirstOrDefault(claim => claim.Type == MailChimpAuthenticationDefaults.AvatarClaimType)?.Value;
             if (string.IsNullOrEmpty(avatarUrl))
                 return;
 

@@ -2,9 +2,9 @@
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Http.Authentication;
-using Microsoft.AspNetCore.Http.Features.Authentication;
+using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Nop.Core;
 using Nop.Plugin.ExternalAuth.MailChimp.Models;
 using Nop.Services.Authentication.External;
@@ -23,9 +23,8 @@ namespace Nop.Plugin.ExternalAuth.MailChimp.Controllers
 
         private readonly IExternalAuthenticationService _externalAuthenticationService;
         private readonly ILocalizationService _localizationService;
+        private readonly IOptionsMonitorCache<OAuthOptions> _optionsCache;
         private readonly ISettingService _settingService;
-        private readonly IStoreService _storeService;
-        private readonly IWorkContext _workContext;
         private readonly MailChimpAuthenticationSettings _mailChimpAuthenticationSettings;
 
         #endregion
@@ -34,16 +33,14 @@ namespace Nop.Plugin.ExternalAuth.MailChimp.Controllers
 
         public MailChimpAuthenticationController(IExternalAuthenticationService externalAuthenticationService,
             ILocalizationService localizationService,
-            ISettingService settingService,            
-            IStoreService storeService,
-            IWorkContext workContext,
+            IOptionsMonitorCache<OAuthOptions> optionsCache,
+            ISettingService settingService,
             MailChimpAuthenticationSettings mailChimpAuthenticationSettings)
         {
             this._externalAuthenticationService = externalAuthenticationService;
             this._localizationService = localizationService;
+            this._optionsCache = optionsCache;
             this._settingService = settingService;
-            this._storeService = storeService;
-            this._workContext = workContext;
             this._mailChimpAuthenticationSettings = mailChimpAuthenticationSettings;
         }
 
@@ -55,21 +52,11 @@ namespace Nop.Plugin.ExternalAuth.MailChimp.Controllers
         [Area("Admin")]
         public IActionResult Configure()
         {
-            //load settings for a chosen store scope
-            var storeScope = this.GetActiveStoreScopeConfiguration(_storeService, _workContext);
-            var settings = _settingService.LoadSetting<MailChimpAuthenticationSettings>(storeScope);
-
             var model = new ConfigurationModel
             {
-                ClientId = settings.ClientId,
-                ClientSecret = settings.ClientSecret,
-                ActiveStoreScopeConfiguration = storeScope
+                ClientId = _mailChimpAuthenticationSettings.ClientId,
+                ClientSecret = _mailChimpAuthenticationSettings.ClientSecret
             };
-            if (storeScope > 0)
-            {
-                model.ClientId_OverrideForStore = _settingService.SettingExists(settings, setting => setting.ClientId, storeScope);
-                model.ClientSecret_OverrideForStore = _settingService.SettingExists(settings, setting => setting.ClientSecret, storeScope);
-            }
 
             return View("~/Plugins/ExternalAuth.MailChimp/Views/Configure.cshtml", model);
         }
@@ -83,22 +70,13 @@ namespace Nop.Plugin.ExternalAuth.MailChimp.Controllers
             if (!ModelState.IsValid)
                 return Configure();
 
-            //load settings for a chosen store scope
-            var storeScope = this.GetActiveStoreScopeConfiguration(_storeService, _workContext);
-            var settings = _settingService.LoadSetting<MailChimpAuthenticationSettings>(storeScope);
-
             //save settings
-            settings.ClientId = model.ClientId;
-            settings.ClientSecret = model.ClientSecret;
+            _mailChimpAuthenticationSettings.ClientId = model.ClientId;
+            _mailChimpAuthenticationSettings.ClientSecret = model.ClientSecret;
+            _settingService.SaveSetting(_mailChimpAuthenticationSettings);
 
-            /* We do not clear cache after each setting update.
-             * This behavior can increase performance because cached settings will not be cleared 
-             * and loaded from database after each update */
-            _settingService.SaveSettingOverridablePerStore(settings, setting => setting.ClientId, model.ClientId_OverrideForStore, storeScope, false);
-            _settingService.SaveSettingOverridablePerStore(settings, setting => setting.ClientSecret, model.ClientSecret_OverrideForStore, storeScope, false);
-           
-            //now clear settings cache
-            _settingService.ClearCache();
+            //clear MailChimp authentication options cache
+            _optionsCache.TryRemove(MailChimpAuthenticationDefaults.AuthenticationScheme);
 
             SuccessNotification(_localizationService.GetResource("Admin.Plugins.Saved"));
 
@@ -125,23 +103,19 @@ namespace Nop.Plugin.ExternalAuth.MailChimp.Controllers
         public async Task<IActionResult> LoginCallback(string returnUrl)
         {
             //authenticate MailChimp user
-            var authenticateContext = new AuthenticateContext(MailChimpAuthenticationDefaults.AuthenticationScheme);
-            await this.HttpContext?.Authentication?.AuthenticateAsync(authenticateContext);
-
-            //get authenticated user identity
-            var userIdentity = authenticateContext.Principal?.Identities?.FirstOrDefault(identity => identity.IsAuthenticated);
-            if (userIdentity == null || !userIdentity.Claims.Any())
+            var authenticateResult = await this.HttpContext.AuthenticateAsync(MailChimpAuthenticationDefaults.AuthenticationScheme);
+            if (!authenticateResult.Succeeded || !authenticateResult.Principal.Claims.Any())
                 return RedirectToRoute("Login");
 
             //create external authentication parameters
             var authenticationParameters = new ExternalAuthenticationParameters
             {
                 ProviderSystemName = MailChimpAuthenticationDefaults.ProviderSystemName,
-                AccessToken = new AuthenticationProperties(authenticateContext.Properties).GetTokenValue("access_token"),
-                Email = userIdentity.FindFirst(claim => claim.Type == ClaimTypes.Email)?.Value,
-                ExternalIdentifier = userIdentity.FindFirst(claim => claim.Type == ClaimTypes.NameIdentifier)?.Value,
-                ExternalDisplayIdentifier = userIdentity.FindFirst(claim => claim.Type == ClaimTypes.Name)?.Value,
-                Claims = userIdentity.Claims.Select(claim => new ExternalAuthenticationClaim(claim.Type, claim.Value)).ToList()
+                AccessToken = await this.HttpContext.GetTokenAsync(MailChimpAuthenticationDefaults.AuthenticationScheme, "access_token"),
+                Email = authenticateResult.Principal.FindFirst(claim => claim.Type == ClaimTypes.Email)?.Value,
+                ExternalIdentifier = authenticateResult.Principal.FindFirst(claim => claim.Type == ClaimTypes.NameIdentifier)?.Value,
+                ExternalDisplayIdentifier = authenticateResult.Principal.FindFirst(claim => claim.Type == ClaimTypes.Name)?.Value,
+                Claims = authenticateResult.Principal.Claims.Select(claim => new ExternalAuthenticationClaim(claim.Type, claim.Value)).ToList()
             };
 
             //authenticate Nop user

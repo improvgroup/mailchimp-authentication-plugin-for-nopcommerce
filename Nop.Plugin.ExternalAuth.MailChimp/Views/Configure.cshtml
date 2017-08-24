@@ -4,11 +4,7 @@
 }
 @inject Nop.Core.IWebHelper webHelper
 
-@await Component.InvokeAsync("StoreScopeConfiguration")
-
-@using (Html.BeginForm("Configure", "MailChimpAuthentication"))
-{
-    @Html.AntiForgeryToken()
+<form asp-controller="MailChimpAuthentication" asp-action="Configure" method="post">
     <div class="panel-group">
         <div class="panel panel-default">
             <div class="panel-body">
@@ -23,22 +19,20 @@
                 </p>
                 <div class="form-group">
                     <div class="col-md-3">
-                        @Html.OverrideStoreCheckboxFor(model => model.ClientId_OverrideForStore, model => model.ClientId, Model.ActiveStoreScopeConfiguration)
-                        @Html.NopLabelFor(model => model.ClientId)
+                        <nop-label asp-for="ClientId" />
                     </div>
                     <div class="col-md-9">
-                        @Html.NopEditorFor(model => model.ClientId)
-                        @Html.ValidationMessageFor(model => model.ClientId)
+                        <nop-editor asp-for="ClientId" />
+                        <span asp-validation-for="ClientId"></span>
                     </div>
                 </div>
                 <div class="form-group">
                     <div class="col-md-3">
-                        @Html.OverrideStoreCheckboxFor(model => model.ClientSecret_OverrideForStore, model => model.ClientSecret, Model.ActiveStoreScopeConfiguration)
-                        @Html.NopLabelFor(model => model.ClientSecret)
+                        <nop-label asp-for="ClientSecret" />
                     </div>
                     <div class="col-md-9">
-                        @Html.NopEditorFor(model => model.ClientSecret)
-                        @Html.ValidationMessageFor(model => model.ClientSecret)
+                        <nop-editor asp-for="ClientSecret" />
+                        <span asp-validation-for="ClientSecret"></span>
                     </div>
                 </div>
                 <div class="form-group">
@@ -48,5 +42,5 @@
                 </div> 
             </div>
         </div>
-    </div> 
-}
+    </div>
+</form>
