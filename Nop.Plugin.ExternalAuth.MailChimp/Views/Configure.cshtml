@@ -1,4 +1,5 @@
 ﻿@model Nop.Plugin.ExternalAuth.MailChimp.Models.ConfigurationModel
+@using Nop.Plugin.ExternalAuth.MailChimp
 @{
     Layout = "_ConfigurePlugin";
 }
@@ -14,8 +15,9 @@
                     1. Log into your MailChimp account (click <a href="https://login.mailchimp.com/signup/" target="_blank">here</a> to create a new one).<br />
                     2. Go to Profile -> Extras -> Registered apps.<br />
                     3. Register a new App.<br />
-                    4. Enter "@($"{webHelper.GetStoreLocation()}signin-mailchimp")" into Redirect URI field.<br />
+                    4. Enter <em>@($"{webHelper.GetStoreLocation().TrimEnd('/')}{MailChimpAuthenticationDefaults.CallbackPath}")</em> into Redirect URI field.<br />
                     5. Copy your Client ID and Client secret below.<br />
+                    6. Save.
                 </p>
                 <div class="form-group">
                     <div class="col-md-3">

@@ -11,12 +11,12 @@ using Nop.Services.Localization;
 using Nop.Services.Logging;
 using Nop.Services.Media;
 
-namespace Nop.Plugin.ExternalAuth.MailChimp.Infrastructure.Cache
+namespace Nop.Plugin.ExternalAuth.MailChimp.Infrastructure
 {
     /// <summary>
-    /// MailChimp authentication event consumer (used for saving customer fields on registration)
+    /// Represents MailChimp authentication event consumer (used for saving customer fields on registration)
     /// </summary>
-    public partial class MailChimpAuthenticationEventConsumer : IConsumer<CustomerAutoRegisteredByExternalMethodEvent>
+    public partial class EventConsumer : IConsumer<CustomerAutoRegisteredByExternalMethodEvent>
     {
         #region Fields
 
@@ -30,7 +30,7 @@ namespace Nop.Plugin.ExternalAuth.MailChimp.Infrastructure.Cache
 
         #region Ctor
 
-        public MailChimpAuthenticationEventConsumer(CustomerSettings customerSettings,
+        public EventConsumer(CustomerSettings customerSettings,
             IGenericAttributeService genericAttributeService,
             ILocalizationService localizationService,
             ILogger logger,
@@ -47,13 +47,17 @@ namespace Nop.Plugin.ExternalAuth.MailChimp.Infrastructure.Cache
 
         #region Methods
 
+        /// <summary>
+        /// Handle customer auto-registered by external method event 
+        /// </summary>
+        /// <param name="eventMessage">Event message</param>
         public void HandleEvent(CustomerAutoRegisteredByExternalMethodEvent eventMessage)
         {
-            if (eventMessage?.Customer == null || eventMessage?.AuthenticationParameters == null)
+            if (eventMessage?.Customer == null || eventMessage.AuthenticationParameters == null)
                 return;
 
             //handle event only for this authentication method
-            if (!eventMessage.AuthenticationParameters.ProviderSystemName.Equals(MailChimpAuthenticationDefaults.ProviderSystemName))
+            if (!eventMessage.AuthenticationParameters.ProviderSystemName.Equals(MailChimpAuthenticationDefaults.SystemName))
                 return;
 
             //store some of the customer fields
@@ -71,12 +75,11 @@ namespace Nop.Plugin.ExternalAuth.MailChimp.Infrastructure.Cache
 
             try
             {
-                //try to get byte array of the user avatar
+                //try to get byte array of the user avatar image
                 byte[] customerPictureBinary;
                 using (var webClient = new WebClient())
-                {
                     customerPictureBinary = webClient.DownloadData(avatarUrl);
-                }
+
                 if (customerPictureBinary.Length > _customerSettings.AvatarMaximumSizeBytes)
                 {
                     _logger.Error(string.Format(_localizationService.GetResource("Account.Avatar.MaximumUploadedFileSize"), _customerSettings.AvatarMaximumSizeBytes));

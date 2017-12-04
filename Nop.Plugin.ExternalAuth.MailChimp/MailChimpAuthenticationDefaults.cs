@@ -2,48 +2,58 @@
 namespace Nop.Plugin.ExternalAuth.MailChimp
 {
     /// <summary>
-    /// Default values used by the MailChimp authentication middleware
+    /// Represents constants of the MailChimp authentication method
     /// </summary>
-    public static class MailChimpAuthenticationDefaults
+    public class MailChimpAuthenticationDefaults
     {
         /// <summary>
-        /// System name of the external authentication method
+        /// System name of the MailChimp authentication method
         /// </summary>
-        public const string ProviderSystemName = "ExternalAuth.MailChimp";
+        public static string SystemName => "ExternalAuth.MailChimp";
 
         /// <summary>
-        /// The logical name for an authentication scheme
+        /// The logical name of authentication scheme
         /// </summary>
-        public const string AuthenticationScheme = "MailChimp";
+        public static string AuthenticationScheme => "MailChimp";
 
         /// <summary>
         /// The issuer that should be used for any claims that are created
         /// </summary>
-        public const string ClaimsIssuer = "MailChimp";
+        public static string ClaimsIssuer => "MailChimp";
+
+        /// <summary>
+        /// The name of the access token
+        /// </summary>
+        public static string AccessTokenName => "access_token";
 
         /// <summary>
         /// The claim type of the avatar
         /// </summary>
-        public const string AvatarClaimType = "urn:mailchimp:avatar_url";
+        public static string AvatarClaimType => "urn:mailchimp:avatar_url";
 
         /// <summary>
         /// Callback path
         /// </summary>
-        public const string CallbackPath = "/signin-mailchimp";
+        public static string CallbackPath => "/signin-mailchimp";
 
         /// <summary>
         /// The URI where the client will be redirected to authenticate
         /// </summary>
-        public const string AuthorizationEndpoint = "https://login.mailchimp.com/oauth2/authorize";
+        public static string AuthorizationEndpoint => "https://login.mailchimp.com/oauth2/authorize";
 
         /// <summary>
         /// The URI the middleware will access to exchange the OAuth token
         /// </summary>
-        public const string TokenEndpoint = "https://login.mailchimp.com/oauth2/token";
+        public static string TokenEndpoint => "https://login.mailchimp.com/oauth2/token";
 
         /// <summary>
         /// The URI the middleware will access to obtain the user information
         /// </summary>
-        public const string UserInformationEndpoint = "https://login.mailchimp.com/oauth2/metadata";
+        public static string UserInformationEndpoint => "https://login.mailchimp.com/oauth2/metadata";
+
+        /// <summary>
+        /// Name of the view component
+        /// </summary>
+        public const string ViewComponentName = "MailChimpAuthentication";
     }
 }

@@ -3,7 +3,7 @@ using Nop.Core.Configuration;
 namespace Nop.Plugin.ExternalAuth.MailChimp
 {
     /// <summary>
-    /// Represents settings of the MailChimp authentication mehod
+    /// Represents settings of the MailChimp authentication method
     /// </summary>
     public class MailChimpAuthenticationSettings : ISettings
     {

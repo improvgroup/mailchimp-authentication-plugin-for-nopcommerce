@@ -45,7 +45,7 @@ namespace Nop.Plugin.ExternalAuth.MailChimp
         /// <param name="viewComponentName">View component name</param>
         public void GetPublicViewComponent(out string viewComponentName)
         {
-            viewComponentName = "MailChimpAuthentication";
+            viewComponentName = MailChimpAuthenticationDefaults.ViewComponentName;
         }
 
         /// <summary>
@@ -64,7 +64,7 @@ namespace Nop.Plugin.ExternalAuth.MailChimp
 
             base.Install();
         }
-        
+
         /// <summary>
         /// Uninstall the plugin
         /// </summary>

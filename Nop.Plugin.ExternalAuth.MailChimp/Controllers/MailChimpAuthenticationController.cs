@@ -10,10 +10,9 @@ using Nop.Plugin.ExternalAuth.MailChimp.Models;
 using Nop.Services.Authentication.External;
 using Nop.Services.Configuration;
 using Nop.Services.Localization;
-using Nop.Services.Stores;
+using Nop.Web.Framework;
 using Nop.Web.Framework.Controllers;
 using Nop.Web.Framework.Mvc.Filters;
-using Nop.Web.Framework.Security;
 
 namespace Nop.Plugin.ExternalAuth.MailChimp.Controllers
 {
@@ -49,9 +48,10 @@ namespace Nop.Plugin.ExternalAuth.MailChimp.Controllers
         #region Methods
 
         [AuthorizeAdmin]
-        [Area("Admin")]
+        [Area(AreaNames.Admin)]
         public IActionResult Configure()
         {
+            //prepare model
             var model = new ConfigurationModel
             {
                 ClientId = _mailChimpAuthenticationSettings.ClientId,
@@ -62,9 +62,9 @@ namespace Nop.Plugin.ExternalAuth.MailChimp.Controllers
         }
 
         [HttpPost]
-        [AdminAntiForgery]
         [AuthorizeAdmin]
-        [Area("Admin")]
+        [AdminAntiForgery]
+        [Area(AreaNames.Admin)]
         public IActionResult Configure(ConfigurationModel model)
         {
             if (!ModelState.IsValid)
@@ -75,7 +75,7 @@ namespace Nop.Plugin.ExternalAuth.MailChimp.Controllers
             _mailChimpAuthenticationSettings.ClientSecret = model.ClientSecret;
             _settingService.SaveSetting(_mailChimpAuthenticationSettings);
 
-            //clear MailChimp authentication options cache
+            //clear MailChimp authentication options cache (workaround to force changes authentication scheme parameters)
             _optionsCache.TryRemove(MailChimpAuthenticationDefaults.AuthenticationScheme);
 
             SuccessNotification(_localizationService.GetResource("Admin.Plugins.Saved"));
@@ -85,7 +85,7 @@ namespace Nop.Plugin.ExternalAuth.MailChimp.Controllers
 
         public IActionResult Login(string returnUrl)
         {
-            if (!_externalAuthenticationService.ExternalAuthenticationMethodIsAvailable(MailChimpAuthenticationDefaults.ProviderSystemName))
+            if (!_externalAuthenticationService.ExternalAuthenticationMethodIsAvailable(MailChimpAuthenticationDefaults.SystemName))
                 throw new NopException("MailChimp authentication module cannot be loaded");
 
             if (string.IsNullOrEmpty(_mailChimpAuthenticationSettings.ClientId) || string.IsNullOrEmpty(_mailChimpAuthenticationSettings.ClientSecret))
@@ -110,8 +110,9 @@ namespace Nop.Plugin.ExternalAuth.MailChimp.Controllers
             //create external authentication parameters
             var authenticationParameters = new ExternalAuthenticationParameters
             {
-                ProviderSystemName = MailChimpAuthenticationDefaults.ProviderSystemName,
-                AccessToken = await this.HttpContext.GetTokenAsync(MailChimpAuthenticationDefaults.AuthenticationScheme, "access_token"),
+                ProviderSystemName = MailChimpAuthenticationDefaults.SystemName,
+                AccessToken = await this.HttpContext
+                    .GetTokenAsync(MailChimpAuthenticationDefaults.AuthenticationScheme, MailChimpAuthenticationDefaults.AccessTokenName),
                 Email = authenticateResult.Principal.FindFirst(claim => claim.Type == ClaimTypes.Email)?.Value,
                 ExternalIdentifier = authenticateResult.Principal.FindFirst(claim => claim.Type == ClaimTypes.NameIdentifier)?.Value,
                 ExternalDisplayIdentifier = authenticateResult.Principal.FindFirst(claim => claim.Type == ClaimTypes.Name)?.Value,

@@ -13,7 +13,7 @@ using Nop.Services.Logging;
 namespace Nop.Plugin.ExternalAuth.MailChimp.Infrastructure
 {
     /// <summary>
-    /// Registration of MailChimp external authentication
+    /// Represents registrar of MailChimp external authentication
     /// </summary>
     public class MailChimpAuthenticationRegistrar : IExternalAuthenticationRegistrar
     {
@@ -26,15 +26,14 @@ namespace Nop.Plugin.ExternalAuth.MailChimp.Infrastructure
             //add the OAuth2 authentication
             builder.AddOAuth(MailChimpAuthenticationDefaults.AuthenticationScheme, options =>
             {
+                //configure the OAuth2 Client ID and Client Secret
                 var settings = EngineContext.Current.Resolve<MailChimpAuthenticationSettings>();
+                options.ClientId = settings.ClientId;
+                options.ClientSecret = settings.ClientSecret;
 
                 options.CallbackPath = new PathString(MailChimpAuthenticationDefaults.CallbackPath);
                 options.ClaimsIssuer = MailChimpAuthenticationDefaults.ClaimsIssuer;
                 options.SaveTokens = true;
-
-                //configure the OAuth2 Client ID and Client Secret
-                options.ClientId = settings.ClientId;
-                options.ClientSecret = settings.ClientSecret;
 
                 //configure the MailChimp endpoints                
                 options.AuthorizationEndpoint = MailChimpAuthenticationDefaults.AuthorizationEndpoint;
