@@ -1,6 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Nop.Web.Framework.Models;
 using Nop.Web.Framework.Mvc.ModelBinding;
-using Nop.Web.Framework.Mvc.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace Nop.Plugin.ExternalAuth.MailChimp.Models
 {

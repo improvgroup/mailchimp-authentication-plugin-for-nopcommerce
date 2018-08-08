@@ -63,7 +63,7 @@ namespace Nop.Plugin.ExternalAuth.MailChimp.Infrastructure
             //store some of the customer fields
             var firstName = eventMessage.AuthenticationParameters.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Name)?.Value;
             if (!string.IsNullOrEmpty(firstName))
-                _genericAttributeService.SaveAttribute(eventMessage.Customer, SystemCustomerAttributeNames.FirstName, firstName);
+                _genericAttributeService.SaveAttribute(eventMessage.Customer, NopCustomerDefaults.FirstNameAttribute, firstName);
 
             //upload avatar
             var avatarUrl = eventMessage.AuthenticationParameters.Claims.FirstOrDefault(claim => claim.Type == MailChimpAuthenticationDefaults.AvatarClaimType)?.Value;
@@ -89,7 +89,7 @@ namespace Nop.Plugin.ExternalAuth.MailChimp.Infrastructure
                 //save avatar
                 new FileExtensionContentTypeProvider().TryGetContentType(avatarUrl, out string mimeType);
                 var customerAvatar = _pictureService.InsertPicture(customerPictureBinary, mimeType ?? MimeTypes.ImagePng, null);
-                _genericAttributeService.SaveAttribute(eventMessage.Customer, SystemCustomerAttributeNames.AvatarPictureId, customerAvatar.Id);
+                _genericAttributeService.SaveAttribute(eventMessage.Customer, NopCustomerDefaults.AvatarPictureIdAttribute, customerAvatar.Id);
             }
             catch { }
         }

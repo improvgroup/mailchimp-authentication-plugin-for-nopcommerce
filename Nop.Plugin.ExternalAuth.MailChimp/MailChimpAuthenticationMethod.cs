@@ -13,6 +13,7 @@ namespace Nop.Plugin.ExternalAuth.MailChimp
     {
         #region Fields
 
+        private readonly ILocalizationService _localizationService;
         private readonly ISettingService _settingService;
         private readonly IWebHelper _webHelper;
 
@@ -20,9 +21,11 @@ namespace Nop.Plugin.ExternalAuth.MailChimp
 
         #region Ctor
 
-        public MailChimpAuthenticationMethod(ISettingService settingService,
+        public MailChimpAuthenticationMethod(ILocalizationService localizationService, 
+            ISettingService settingService,
             IWebHelper webHelper)
         {
+            this._localizationService = localizationService;
             this._settingService = settingService;
             this._webHelper = webHelper;
         }
@@ -40,12 +43,12 @@ namespace Nop.Plugin.ExternalAuth.MailChimp
         }
 
         /// <summary>
-        /// Gets a view component for displaying plugin in public store
+        /// Gets a name of a view component for displaying plugin in public store
         /// </summary>
-        /// <param name="viewComponentName">View component name</param>
-        public void GetPublicViewComponent(out string viewComponentName)
+        /// <returns>View component name</returns>
+        public string GetPublicViewComponentName()
         {
-            viewComponentName = MailChimpAuthenticationDefaults.ViewComponentName;
+            return MailChimpAuthenticationDefaults.ViewComponentName;
         }
 
         /// <summary>
@@ -57,10 +60,10 @@ namespace Nop.Plugin.ExternalAuth.MailChimp
             _settingService.SaveSetting(new MailChimpAuthenticationSettings());
 
             //locales
-            this.AddOrUpdatePluginLocaleResource("Plugins.ExternalAuth.MailChimp.ClientId", "Client ID");
-            this.AddOrUpdatePluginLocaleResource("Plugins.ExternalAuth.MailChimp.ClientId.Hint", "Enter the OAuth2 client ID here.");
-            this.AddOrUpdatePluginLocaleResource("Plugins.ExternalAuth.MailChimp.ClientSecret", "Client secret");
-            this.AddOrUpdatePluginLocaleResource("Plugins.ExternalAuth.MailChimp.ClientSecret.Hint", "Enter the OAuth2 client secret here.");
+            _localizationService.AddOrUpdatePluginLocaleResource("Plugins.ExternalAuth.MailChimp.ClientId", "Client ID");
+            _localizationService.AddOrUpdatePluginLocaleResource("Plugins.ExternalAuth.MailChimp.ClientId.Hint", "Enter the OAuth2 client ID here.");
+            _localizationService.AddOrUpdatePluginLocaleResource("Plugins.ExternalAuth.MailChimp.ClientSecret", "Client secret");
+            _localizationService.AddOrUpdatePluginLocaleResource("Plugins.ExternalAuth.MailChimp.ClientSecret.Hint", "Enter the OAuth2 client secret here.");
 
             base.Install();
         }
@@ -74,10 +77,10 @@ namespace Nop.Plugin.ExternalAuth.MailChimp
             _settingService.DeleteSetting<MailChimpAuthenticationSettings>();
 
             //locales
-            this.DeletePluginLocaleResource("Plugins.ExternalAuth.MailChimp.ClientId");
-            this.DeletePluginLocaleResource("Plugins.ExternalAuth.MailChimp.ClientId.Hint");
-            this.DeletePluginLocaleResource("Plugins.ExternalAuth.MailChimp.ClientSecret");
-            this.DeletePluginLocaleResource("Plugins.ExternalAuth.MailChimp.ClientSecret.Hint");
+            _localizationService.DeletePluginLocaleResource("Plugins.ExternalAuth.MailChimp.ClientId");
+            _localizationService.DeletePluginLocaleResource("Plugins.ExternalAuth.MailChimp.ClientId.Hint");
+            _localizationService.DeletePluginLocaleResource("Plugins.ExternalAuth.MailChimp.ClientSecret");
+            _localizationService.DeletePluginLocaleResource("Plugins.ExternalAuth.MailChimp.ClientSecret.Hint");
 
             base.Uninstall();
         }
